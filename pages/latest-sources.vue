@@ -33,19 +33,23 @@ const getSourcesDataByTag = async (id) => {
 
 const latestSourcesData = ref([])
 const latestPage = ref(1)
-const latestSize = ref(5)
+const latestSize = ref(10)
 const getLatestSourcesData = async (page, size) => {
-
-  let res = await $fetch('/api/sources/hh/multi-latest-sources', {
-    method: 'POST',
-    body: {
+  const loading = ElLoading.service({
+    text: '加载中...',
+    background: 'transparent',
+    target: '#latest-sources-all',
+  })
+  let res = await $fetch('/api/sources/hh/latest-sources', {
+    method: 'get',
+    query: {
       page: page,
       size: size
     }
   })
-
   if (res.code === 200) {
     latestSourcesData.value = res.data
+    loading.close()
   }
 }
 
@@ -54,23 +58,8 @@ const handleLatestPageChange = (page) => {
   window.scroll(0, 0)
   getLatestSourcesData(latestPage.value, latestSize.value)
 }
-
-const handleOpenSourceLink =async (item) => {
-  if(item.link){
-    window.open(item.link, '_blank')
-  }else{
-    let res = await $fetch('/api/sources/hh/doc', {
-      method: "POST",
-      body: {
-        engine: item.engine,
-        doc_id: item.doc_id
-      }
-    })
-    if (res.code === 200) {
-      window.open(res.data.link, '_blank')
-    }
-  }
-
+const handleOpenSourceLink = (url) => {
+  window.open(url, '_blank')
 }
 // BDY, ALY, QUARK, XUNLEI
 
@@ -99,12 +88,7 @@ onMounted(() => {
         <div class="min-h-[calc(100vh-90px)]" id="latest-sources-all">
           <div class="text-xl font-bold">最新资源</div>
           <div class="grid grid-cols-1 gap-3 mt-3">
-            <disk-info-list
-                :sources="latestSourcesData"
-                type="latest"
-                @open-link="handleOpenSourceLink">
-            </disk-info-list>
-
+            <disk-info-list :sources="latestSourcesData" @open-link="handleOpenSourceLink"></disk-info-list>
           </div>
           <div class="mt-[20px] flex justify-center">
             <client-only>
